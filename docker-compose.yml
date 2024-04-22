@@ -1,0 +1,39 @@
+version: '3'
+services:
+  # Service for the Node.js application
+  app:
+    # Use the official Node.js image with version 16.20.0 as the base
+    image: node:16.20.0
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/how3
+      - JWT_SECRET=secretWizardLizardMonitorEntropyAligator
+    # Set the working directory in the container
+    working_dir: /app
+    # Mount the current directory to /app in the container (for live reload)
+    volumes:
+      - .:/app
+    # Expose port 3000 (or any other port your Express app is listening on)
+    ports:
+      - "3000:3000"
+    # Command to run the application
+    command: npm run start
+    # Environment variables if needed (e.g., for MongoDB connection)
+    # Depends on MongoDB service
+    depends_on:
+      - mongo
+
+  # Service for MongoDB
+  mongo:
+    # Use the official MongoDB image
+    image: mongo
+    # Mount a volume for persistent data storage
+    volumes:
+      - mongodb_data:/data/db
+    # Expose MongoDB port
+    ports:
+      - "27017:27017"
+
+# Define a volume for MongoDB data storage
+volumes:
+  mongodb_data:

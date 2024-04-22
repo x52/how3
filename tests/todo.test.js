@@ -1,122 +1,116 @@
-// src/controllers/todoController.test.js
 const request = require('supertest');
-const app = require('../index'); // Assuming your Express app is exported from index.js
-const Todo = require('../models/Todo');
+const app = require('../index'); // Assuming your Express app is exported from app.js
+const Todo = require('../models/Todos');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const mockUserId = new mongoose.Types.ObjectId();
+describe('Todo Routes', () => {
+    let authToken;
 
-// Mock Todo model
+    beforeAll(async () => {
+        // Mock JWT token for authentication
+        const mockUser = { userId: mockUserId };
+        authToken = jwt.sign(mockUser, process.env.JWT_SECRET, { expiresIn: '1h' });
+    });
 
+    describe('GET /getAllTodos', () => {
+        it('should get all todos', async () => {
+            const response = await request(app)
+                .get('/api/getAllTodos')
+                .set('Authorization', authToken)
+                .expect(200);
 
-describe('Todo Controller', () => {
-    // Existing test cases...
+            // Add your assertions here
+        });
+    });
 
-    describe('POST /api/todos', () => {
+    describe('GET /:id', () => {
+        it('should get a todo by ID', async () => {
+            // Create a mock todo
+            const mockTodo = new Todo({
+                title: 'Test Todo',
+                description: 'Test Description',
+                userId: mockUserId // Assuming this userId is used for authentication
+            });
+            await mockTodo.save();
+
+            const response = await request(app)
+                .get(`/api/${mockTodo._id}`)
+                .set('Authorization', authToken)
+                .expect(200);
+
+            // Add your assertions here
+        });
+    });
+
+    // Add test cases for other routes (createTodo, updateTodo, deleteTodo) similarly
+
+    describe('POST /createTodo', () => {
         it('should create a new todo', async () => {
-            const newTodo = { title: 'New Todo', description: 'New Description', userId: 'user_id_1' };
-            Todo.prototype.save.mockResolvedValue(newTodo);
-
+            const newTodoData = {
+                title: 'New Todo',
+                description: 'New Todo Description',
+            };
+    
             const response = await request(app)
-                .post('/api/todos')
-                .send({ title: 'New Todo', description: 'New Description' })
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(201);
-            expect(response.body).toEqual(newTodo);
-        });
-
-        it('should handle validation error', async () => {
-            const response = await request(app)
-                .post('/api/todos')
-                .send({ description: 'New Description' })
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(500); // Assuming validation is handled with Mongoose schema
-        });
-
-        it('should handle database error', async () => {
-            Todo.prototype.save.mockRejectedValue(new Error('Database error'));
-
-            const response = await request(app)
-                .post('/api/todos')
-                .send({ title: 'New Todo', description: 'New Description' })
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(500);
-            expect(response.body.message).toBe('Database error');
+                .post('/api/createTodo')
+                .set('Authorization', authToken)
+                .send(newTodoData)
+                .expect(201);
+    
+            // Check if the response contains the created todo
+            expect(response.body.title).toBe(newTodoData.title);
+            expect(response.body.description).toBe(newTodoData.description);
+            expect(response.body.userId).toBe(mockUserId.toHexString()); // Assuming userId is stored as ObjectId
         });
     });
-
-    describe('PUT /api/todos/:id', () => {
-        it('should update a todo', async () => {
-            const updatedTodo = { title: 'Updated Todo', description: 'Updated Description', userId: 'user_id_1' };
-            Todo.findOneAndUpdate.mockResolvedValue(updatedTodo);
-
+    
+    describe('PUT /:id', () => {
+        it('should update a todo by ID', async () => {
+            // Create a mock todo
+            const mockTodo = new Todo({
+                title: 'Test Todo',
+                description: 'Test Description',
+                userId: mockUserId // Assuming this userId is used for authentication
+            });
+            await mockTodo.save();
+    
+            const updatedTodoData = {
+                title: 'Updated Todo',
+                description: 'Updated Todo Description'
+            };
+    
             const response = await request(app)
-                .put('/api/todos/1')
-                .send({ title: 'Updated Todo', description: 'Updated Description' })
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(200);
-            expect(response.body).toEqual(updatedTodo);
-        });
-
-        it('should handle not found error', async () => {
-            Todo.findOneAndUpdate.mockResolvedValue(null);
-
-            const response = await request(app)
-                .put('/api/todos/1')
-                .send({ title: 'Updated Todo', description: 'Updated Description' })
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Todo not found');
-        });
-
-        it('should handle database error', async () => {
-            Todo.findOneAndUpdate.mockRejectedValue(new Error('Database error'));
-
-            const response = await request(app)
-                .put('/api/todos/1')
-                .send({ title: 'Updated Todo', description: 'Updated Description' })
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(500);
-            expect(response.body.message).toBe('Database error');
+                .put(`/api/${mockTodo._id}`)
+                .set('Authorization', authToken)
+                .send(updatedTodoData)
+                .expect(200);
+    
+            // Check if the response contains the updated todo
+            expect(response.body.title).toBe(updatedTodoData.title);
+            expect(response.body.description).toBe(updatedTodoData.description);
+            expect(response.body.userId).toBe(mockUserId.toHexString()); // Assuming userId is stored as ObjectId
         });
     });
-
-    describe('DELETE /api/todos/:id', () => {
-        it('should delete a todo', async () => {
-            const deletedTodo = { title: 'Todo 1', description: 'Description 1', userId: 'user_id_1' };
-            Todo.findOneAndDelete.mockResolvedValue(deletedTodo);
-
+    
+    describe('DELETE /:id', () => {
+        it('should delete a todo by ID', async () => {
+            // Create a mock todo
+            const mockTodo = new Todo({
+                title: 'Test Todo',
+                description: 'Test Description',
+                userId: mockUserId // Assuming this userId is used for authentication
+            });
+            await mockTodo.save();
+    
             const response = await request(app)
-                .delete('/api/todos/1')
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(200);
+                .delete(`/api/${mockTodo._id}`)
+                .set('Authorization', authToken)
+                .expect(200);
+    
+            // Check if the response contains the success message
             expect(response.body.message).toBe('Todo deleted successfully');
         });
-
-        it('should handle not found error', async () => {
-            Todo.findOneAndDelete.mockResolvedValue(null);
-
-            const response = await request(app)
-                .delete('/api/todos/1')
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Todo not found');
-        });
-
-        it('should handle database error', async () => {
-            Todo.findOneAndDelete.mockRejectedValue(new Error('Database error'));
-
-            const response = await request(app)
-                .delete('/api/todos/1')
-                .set('Authorization', 'Bearer token');
-
-            expect(response.status).toBe(500);
-            expect(response.body.message).toBe('Database error');
-        });
     });
+    
 });

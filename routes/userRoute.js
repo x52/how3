@@ -5,8 +5,7 @@ const userController = require('../controller/UserController');
 const errorHandler = require('../middlewares/errorHandler');
 const validateRequest = require('../middlewares/validationHandler');
 
-
-// Validation middleware for user creation
+//validation middleware for user creation
 const createUserValidation = [
     body('name').notEmpty(),
     body('email').isEmail(),

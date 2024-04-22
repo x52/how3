@@ -1,12 +1,12 @@
 const request = require('supertest');
 const app = require('../index');
 const User = require('../models/Users');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userController = require('../controller/UserController');
 
 jest.mock('../models/Users');
-jest.mock('bcrypt');
+jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
 
 describe('User Controller', () => {
